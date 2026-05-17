@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, ChevronRight, ArrowUpRight, ArrowDownLeft, Clock, Wallet } from 'lucide-react'
+import { ArrowLeft, ChevronRight, ArrowUpRight, ArrowDownLeft, Clock, Wallet, RotateCcw, XCircle } from 'lucide-react'
 import { WalletCard } from '@/components/shared/WalletCard'
 import { FundWalletModal } from '@/components/pay/FundWalletModal'
 import { SkeletonRow } from '@/components/shared/SkeletonCard'
@@ -11,6 +11,30 @@ import { useWalletBalance, useWalletTransactions, useVerifyWallet } from '@/hook
 import { useAppStore } from '@/store'
 import { cn, formatAmountFromNaira, formatDate } from '@/lib/utils'
 import { IdentityGate } from '@/components/shared/IdentityGate'
+
+function TxIcon({ kind, status }: { kind: string; status: string }) {
+  if (status === 'PENDING') {
+    return (
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50">
+        <Clock className="h-5 w-5 text-amber-500" />
+      </div>
+    )
+  }
+  if (status === 'FAILED') {
+    return (
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50">
+        <XCircle className="h-5 w-5 text-red-400" />
+      </div>
+    )
+  }
+  return (
+    <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl', kind === 'CREDIT' ? 'bg-green-50' : 'bg-red-50')}>
+      {kind === 'CREDIT'
+        ? <ArrowDownLeft className="h-5 w-5 text-green-600" />
+        : <ArrowUpRight className="h-5 w-5 text-red-500" />}
+    </div>
+  )
+}
 
 function WalletPageInner() {
   const walletBalance = useAppStore((s) => s.walletBalance)
@@ -29,7 +53,6 @@ function WalletPageInner() {
     if (!reference || hasVerified.current) return
     hasVerified.current = true
     verifyMutation.mutateAsync({ reference, paymentMethod: 'paystack' }).finally(() => {
-      // Clean up the URL params
       router.replace('/wallet')
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -81,37 +104,54 @@ function WalletPageInner() {
               <p className="text-xs text-gray-400 mt-1">Fund your wallet to get started</p>
             </div>
           ) : (
-            transactions.slice(0, 10).map((tx: any) => (
-              <div key={tx.id} className="flex items-center gap-3.5 px-4 py-3.5">
-                <div
-                  className={cn(
-                    'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
-                    tx.type === 'CREDIT' ? 'bg-green-50' : 'bg-red-50'
-                  )}
-                >
-                  {tx.type === 'CREDIT' ? (
-                    <ArrowDownLeft className="h-5 w-5 text-green-600" />
-                  ) : (
-                    <ArrowUpRight className="h-5 w-5 text-red-500" />
+            transactions.slice(0, 10).map((tx: any) => {
+              const isPending = tx.status === 'PENDING'
+              const isFailed = tx.status === 'FAILED'
+              const isCredit = tx.kind === 'CREDIT'
+
+              return (
+                <div key={tx.id} className="px-4 py-3.5">
+                  <div className="flex items-center gap-3.5">
+                    <TxIcon kind={tx.kind} status={tx.status} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <p className="truncate text-sm font-semibold text-gray-900">
+                          {tx.description || (isCredit ? 'Wallet Funding' : 'Bill Payment')}
+                        </p>
+                        {isPending && (
+                          <span className="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
+                            Pending
+                          </span>
+                        )}
+                        {isFailed && (
+                          <span className="shrink-0 rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-600">
+                            Failed
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-400 mt-0.5">{formatDate(tx.createdAt)}</p>
+                    </div>
+                    <p className={cn(
+                      'text-sm font-bold shrink-0',
+                      isPending || isFailed ? 'text-gray-400' : isCredit ? 'text-green-600' : 'text-red-500'
+                    )}>
+                      {isCredit ? '+' : '−'}{formatAmountFromNaira(tx.amount)}
+                    </p>
+                  </div>
+
+                  {/* Retry button for pending credit transactions */}
+                  {isPending && isCredit && tx.authorizationUrl && (
+                    <button
+                      onClick={() => { window.location.href = tx.authorizationUrl }}
+                      className="mt-2 ml-[52px] flex items-center gap-1 text-xs font-semibold text-[#6C3CE1] hover:underline"
+                    >
+                      <RotateCcw className="h-3 w-3" />
+                      Complete payment
+                    </button>
                   )}
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-gray-900">
-                    {tx.description || (tx.type === 'CREDIT' ? 'Wallet Funding' : 'Bill Payment')}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-0.5">{formatDate(tx.createdAt)}</p>
-                </div>
-                <p
-                  className={cn(
-                    'text-sm font-bold shrink-0',
-                    tx.type === 'CREDIT' ? 'text-green-600' : 'text-red-500'
-                  )}
-                >
-                  {tx.type === 'CREDIT' ? '+' : '−'}
-                  {formatAmountFromNaira(tx.amount)}
-                </p>
-              </div>
-            ))
+              )
+            })
           )}
         </div>
       </div>

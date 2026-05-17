@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
-import { ArrowLeft, ArrowDownLeft, ArrowUpRight } from 'lucide-react'
+import { ArrowLeft, ArrowDownLeft, ArrowUpRight, Clock, XCircle, RotateCcw } from 'lucide-react'
 import Link from 'next/link'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { SkeletonRow } from '@/components/shared/SkeletonCard'
@@ -22,9 +22,9 @@ export default function WalletTransactionsPage() {
     isLoading,
   } = useInfiniteQuery({
     queryKey: ['wallet-transactions-infinite'],
-    queryFn: async ({ pageParam = 1 }) => {
+    queryFn: async () => {
       const { data } = await walletApi.getTransactions(20)
-      return data?.transactions || data?.data?.transactions || (Array.isArray(data?.data) ? data.data : [])
+      return data?.data?.transactions || data?.transactions || []
     },
     initialPageParam: 1,
     getNextPageParam: (lastPage, pages) => {
@@ -37,9 +37,7 @@ export default function WalletTransactionsPage() {
       if (isLoading) return
       if (observerRef.current) observerRef.current.disconnect()
       observerRef.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && hasNextPage) {
-          fetchNextPage()
-        }
+        if (entries[0].isIntersecting && hasNextPage) fetchNextPage()
       })
       if (node) observerRef.current.observe(node)
     },
@@ -49,8 +47,8 @@ export default function WalletTransactionsPage() {
   const allTxns = data?.pages.flat() || []
   const filtered = allTxns.filter((tx: any) => {
     if (filter === 'ALL') return true
-    if (filter === 'CREDIT') return tx.type === 'CREDIT'
-    if (filter === 'DEBIT') return tx.type === 'DEBIT'
+    if (filter === 'CREDIT') return tx.kind === 'CREDIT'
+    if (filter === 'DEBIT') return tx.kind === 'DEBIT'
     return true
   })
 
@@ -89,48 +87,69 @@ export default function WalletTransactionsPage() {
           Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />)
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center">
-            <p className="text-3xl mb-2">💳</p>
             <p className="text-sm text-gray-500">No transactions found</p>
           </div>
         ) : (
-          filtered.map((tx: any, idx: number) => (
-            <div
-              key={tx.id || idx}
-              ref={idx === filtered.length - 1 ? lastRef : null}
-              className="flex items-center gap-3 p-3"
-            >
+          filtered.map((tx: any, idx: number) => {
+            const isPending = tx.status === 'PENDING'
+            const isFailed = tx.status === 'FAILED'
+            const isCredit = tx.kind === 'CREDIT'
+
+            return (
               <div
-                className={cn(
-                  'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full',
-                  tx.type === 'CREDIT' ? 'bg-green-100' : 'bg-red-100'
-                )}
+                key={tx.id || idx}
+                ref={idx === filtered.length - 1 ? lastRef : null}
+                className="p-3"
               >
-                {tx.type === 'CREDIT' ? (
-                  <ArrowDownLeft className="h-5 w-5 text-green-600" />
-                ) : (
-                  <ArrowUpRight className="h-5 w-5 text-red-600" />
+                <div className="flex items-center gap-3">
+                  <div className={cn(
+                    'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full',
+                    isPending ? 'bg-amber-50' : isFailed ? 'bg-red-50' : isCredit ? 'bg-green-100' : 'bg-red-100'
+                  )}>
+                    {isPending ? (
+                      <Clock className="h-5 w-5 text-amber-500" />
+                    ) : isFailed ? (
+                      <XCircle className="h-5 w-5 text-red-400" />
+                    ) : isCredit ? (
+                      <ArrowDownLeft className="h-5 w-5 text-green-600" />
+                    ) : (
+                      <ArrowUpRight className="h-5 w-5 text-red-600" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <p className="truncate text-sm font-medium text-gray-900">
+                        {tx.description || (isCredit ? 'Wallet Funding' : 'Bill Payment')}
+                      </p>
+                      {isPending && (
+                        <span className="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">Pending</span>
+                      )}
+                      {isFailed && (
+                        <span className="shrink-0 rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-600">Failed</span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500">{formatDate(tx.createdAt)}</p>
+                  </div>
+                  <p className={cn(
+                    'text-sm font-semibold flex-shrink-0',
+                    isPending || isFailed ? 'text-gray-400' : isCredit ? 'text-green-600' : 'text-red-600'
+                  )}>
+                    {isCredit ? '+' : '-'}{formatAmountFromNaira(tx.amount)}
+                  </p>
+                </div>
+
+                {isPending && isCredit && tx.authorizationUrl && (
+                  <button
+                    onClick={() => { window.location.href = tx.authorizationUrl }}
+                    className="mt-1.5 ml-[52px] flex items-center gap-1 text-xs font-semibold text-[#6C3CE1] hover:underline"
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                    Complete payment
+                  </button>
                 )}
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-gray-900">
-                  {tx.description || (tx.type === 'CREDIT' ? 'Wallet Funding' : 'Bill Payment')}
-                </p>
-                <p className="text-xs text-gray-500">{formatDate(tx.createdAt)}</p>
-                {tx.status && tx.status !== 'SUCCESS' && (
-                  <span className="text-xs text-amber-600">{tx.status}</span>
-                )}
-              </div>
-              <p
-                className={cn(
-                  'text-sm font-semibold flex-shrink-0',
-                  tx.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'
-                )}
-              >
-                {tx.type === 'CREDIT' ? '+' : '-'}
-                {formatAmountFromNaira(tx.amount)}
-              </p>
-            </div>
-          ))
+            )
+          })
         )}
 
         {isFetchingNextPage && <SkeletonRow />}
