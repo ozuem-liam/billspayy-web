@@ -14,6 +14,38 @@ interface ReceiptPageProps {
   params: Promise<{ reference: string }>
 }
 
+// Map Creditswitch service IDs to human-readable provider names
+const SERVICE_ID_NAMES: Record<string, string> = {
+  // Airtime
+  A04E: 'MTN',
+  A03E: 'Glo',
+  A01E: 'Airtel',
+  A02E: '9mobile',
+  // Electricity
+  'ikeja-electric': 'Ikeja Electric (IKEDC)',
+  'eko-electric': 'Eko Electric (EKEDC)',
+  'abuja-electric': 'Abuja Electric (AEDC)',
+  'portharcourt-electric': 'Port Harcourt Electric (PHED)',
+  'ibadan-electric': 'Ibadan Electric (IBEDC)',
+  'enugu-electric': 'Enugu Electric (EEDC)',
+  'kaduna-electric': 'Kaduna Electric (KAEDCO)',
+  'kano-electric': 'Kano Electric (KEDC)',
+  'jos-electric': 'Jos Electric (JED)',
+  'benin-electric': 'Benin Electric (BEDC)',
+  'aba-electric': 'Aba Electric (ABEDC)',
+  'yola-electric': 'Yola Electric (YEDC)',
+  // Cable TV
+  DSTV: 'DStv',
+  GOTV: 'GOtv',
+  STARTIMES: 'StarTimes',
+  SHOWMAX: 'Showmax',
+}
+
+function getProviderName(serviceId: string | null | undefined): string | null {
+  if (!serviceId) return null
+  return SERVICE_ID_NAMES[serviceId] ?? SERVICE_ID_NAMES[serviceId.toUpperCase()] ?? serviceId
+}
+
 export default function ReceiptPage({ params }: ReceiptPageProps) {
   const { reference } = use(params)
   const { data: receipt, isLoading, error } = useReceipt(reference)
@@ -52,32 +84,27 @@ export default function ReceiptPage({ params }: ReceiptPageProps) {
     if (!receipt || !receiptCardRef.current) return
     setDownloading(true)
     try {
-      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
-        import('html2canvas'),
-        import('jspdf'),
-      ])
+      const html2canvas = (await import('html2canvas')).default
+      const { jsPDF } = await import('jspdf')
 
       const canvas = await html2canvas(receiptCardRef.current, {
-        scale: 2,
+        scale: 3,
         useCORS: true,
         backgroundColor: '#ffffff',
+        logging: false,
       })
 
       const imgData = canvas.toDataURL('image/png')
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'px', format: 'a4' })
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' })
 
       const pageWidth = pdf.internal.pageSize.getWidth()
-      const pageHeight = pdf.internal.pageSize.getHeight()
-      const imgWidth = pageWidth - 40 // 20px padding each side
+      const imgWidth = pageWidth - 80
       const imgHeight = (canvas.height * imgWidth) / canvas.width
 
-      // Centre vertically if it fits, otherwise start from top with padding
-      const yOffset = imgHeight < pageHeight ? (pageHeight - imgHeight) / 2 : 20
-
-      pdf.addImage(imgData, 'PNG', 20, yOffset, imgWidth, imgHeight)
+      pdf.addImage(imgData, 'PNG', 40, 40, imgWidth, imgHeight)
       pdf.save(`billspayy-receipt-${reference}.pdf`)
-      toast.success('PDF downloaded!')
-    } catch (e) {
+      toast.success('Receipt downloaded!')
+    } catch {
       toast.error('Could not generate PDF')
     } finally {
       setDownloading(false)
@@ -124,6 +151,7 @@ export default function ReceiptPage({ params }: ReceiptPageProps) {
 
   const icon = getCategoryIcon(receipt.category)
   const label = getCategoryLabel(receipt.category)
+  const providerName = getProviderName(receipt.serviceId)
 
   const rows: Array<{ label: string; value: string; mono?: boolean; copiable?: boolean; highlight?: boolean }> = [
     receipt.recipient && { label: 'Recipient', value: receipt.recipient },
@@ -132,7 +160,7 @@ export default function ReceiptPage({ params }: ReceiptPageProps) {
     receipt.customerAddress && { label: 'Address', value: receipt.customerAddress },
     receipt.token && { label: 'Token', value: receipt.token, mono: true, copiable: true, highlight: true },
     receipt.smartCardNumber && { label: 'Smart Card', value: receipt.smartCardNumber, mono: true },
-    receipt.serviceId && { label: 'Provider', value: receipt.serviceId },
+    providerName && { label: 'Provider', value: providerName },
     { label: 'Reference', value: reference, mono: true, copiable: true },
   ].filter(Boolean) as Array<{ label: string; value: string; mono?: boolean; copiable?: boolean; highlight?: boolean }>
 
@@ -152,7 +180,7 @@ export default function ReceiptPage({ params }: ReceiptPageProps) {
             onClick={handleDownload}
             disabled={downloading}
             className="rounded-full p-3 hover:bg-gray-100 transition disabled:opacity-50"
-            title="Download PDF"
+            title="Download receipt"
           >
             <Download className="h-5 w-5 text-gray-500" />
           </button>
@@ -166,14 +194,7 @@ export default function ReceiptPage({ params }: ReceiptPageProps) {
         </div>
       </div>
 
-      {/* This div is captured by html2canvas */}
       <div ref={receiptCardRef} className="rounded-2xl bg-white border border-gray-100 overflow-hidden">
-        {/* Brand header — visible in PDF */}
-        <div className="px-5 py-3 bg-[#6C3CE1] flex items-center justify-between">
-          <span className="text-white font-bold text-base tracking-wide">BillsPayy</span>
-          <span className="text-white/70 text-xs">Official Receipt</span>
-        </div>
-
         {/* Status Hero */}
         <div className="px-6 pt-8 pb-6 text-center border-b border-gray-50">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-50 text-4xl">
@@ -197,9 +218,7 @@ export default function ReceiptPage({ params }: ReceiptPageProps) {
             {rows.map(({ label, value, mono, copiable, highlight }) => (
               <div
                 key={label}
-                className={`flex items-center justify-between gap-4 px-5 py-3.5 ${
-                  highlight ? 'bg-amber-50/60' : ''
-                }`}
+                className={`flex items-center justify-between gap-4 px-5 py-3.5 ${highlight ? 'bg-amber-50/60' : ''}`}
               >
                 <p className={`text-sm shrink-0 ${highlight ? 'font-semibold text-amber-700' : 'text-gray-400'}`}>
                   {label}
@@ -231,7 +250,7 @@ export default function ReceiptPage({ params }: ReceiptPageProps) {
 
         {/* Commission */}
         {receipt.commission > 0 && (
-          <div className="mx-5 mt-3 rounded-xl border border-green-100 bg-green-50 px-4 py-3.5">
+          <div className="mx-5 mb-5 mt-3 rounded-xl border border-green-100 bg-green-50 px-4 py-3.5">
             <p className="text-xs font-semibold uppercase tracking-wide text-green-600 mb-2">Commission Earned</p>
             <div className="flex items-center justify-between">
               <p className="text-sm text-green-700">You earned</p>
@@ -239,11 +258,6 @@ export default function ReceiptPage({ params }: ReceiptPageProps) {
             </div>
           </div>
         )}
-
-        {/* PDF footer */}
-        <div className="px-5 py-3 mt-3 border-t border-gray-50 text-center">
-          <p className="text-xs text-gray-300">billspayy.com · {formatDate(receipt.createdAt)}</p>
-        </div>
       </div>
 
       {/* Actions */}
@@ -254,7 +268,7 @@ export default function ReceiptPage({ params }: ReceiptPageProps) {
           className="w-full bg-[#6C3CE1] hover:bg-[#5B32C7] disabled:opacity-60"
         >
           <Download className="mr-2 h-4 w-4" />
-          {downloading ? 'Generating PDF…' : 'Download Receipt (PDF)'}
+          {downloading ? 'Generating…' : 'Download Receipt'}
         </Button>
         <div className="grid grid-cols-2 gap-3">
           <Button onClick={handleShare} variant="outline">
