@@ -59,7 +59,7 @@ function AirtimePageInner() {
       }
 
       const { data } = await billsApi.purchaseAirtime({
-        amount: amountKobo,
+        amount, // naira — backend converts to kobo internally
         recipient: phone,
         serviceId: networkServiceMap[network] ?? network,
         pin,

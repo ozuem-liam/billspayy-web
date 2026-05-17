@@ -188,7 +188,7 @@ function ElectricityPageInner() {
       toast.loading('Processing payment...', { id: 'elec-pay' })
 
       const { data } = await billsApi.purchaseElectricity({
-        amount: amountKobo,
+        amount, // naira — backend converts to kobo internally
         customerAccountId: validated.customerAccountId,
         customerName: validated.customerName,
         customerAddress: validated.customerAddress,

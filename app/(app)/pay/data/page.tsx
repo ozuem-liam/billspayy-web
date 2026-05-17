@@ -63,7 +63,7 @@ function DataPageInner() {
       toast.loading('Processing payment...', { id: 'data-pay' })
 
       const { data } = await billsApi.purchaseData({
-        amount: amountKobo,
+        amount: selectedPlan.amount, // naira — backend converts to kobo internally
         recipient: phone,
         productId: selectedPlan.productId || selectedPlan.id,
         network,

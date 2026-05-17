@@ -137,7 +137,7 @@ function CablePageInner() {
       toast.loading('Processing payment...', { id: 'cable-pay' })
 
       const { data } = await billsApi.purchaseCableTv({
-        amount: amountKobo,
+        amount: selectedPlan.amount, // naira — backend converts to kobo internally
         customerNo: validated.customerNo,
         productCode: selectedPlan.productCode,
         serviceId: currentProvider.serviceId,
