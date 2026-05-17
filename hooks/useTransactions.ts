@@ -48,14 +48,20 @@ export function useRequery(requestId: string, enabled = true) {
     queryKey: ['requery', requestId],
     queryFn: async () => {
       const { data } = await transactionsApi.requery(requestId)
-      return data
+      // Unwrap GlobalResponseInterceptor: { success, data: payload }
+      return data?.data || data
     },
-    enabled: !!requestId && enabled,
+    enabled: !!requestId && requestId !== 'ref' && enabled,
     refetchInterval: (query) => {
       const status = query.state.data?.status
-      if (status === 'SUCCESS' || status === 'FAILED') return false
+      if (
+        status === 'SUCCESS' ||
+        status === 'SUCCESSFUL' ||
+        status === 'FAILED' ||
+        status === 'NOT_FOUND'
+      ) return false
       return 3000
     },
-    retry: 10,
+    retry: 3,
   })
 }

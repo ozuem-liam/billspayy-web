@@ -70,8 +70,9 @@ function AirtimePageInner() {
       setLastPhone(phone)
 
       const result = data?.data || data
-      const reference = result?.reference || result?.requestId || 'ref'
-      const requestId = result?.requestId || result?.reference || 'ref'
+      const transactionId = result?.transactionId
+      const reference = result?.reference || transactionId || 'ref'
+      const requestId = result?.requestId || transactionId || 'ref'
       const status = result?.status || 'PROCESSING'
 
       await refetchBalance()

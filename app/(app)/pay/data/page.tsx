@@ -75,8 +75,9 @@ function DataPageInner() {
       setLastPhone(phone)
 
       const result = data?.data || data
-      const reference = result?.reference || 'ref'
-      const requestId = result?.requestId || reference
+      const transactionId = result?.transactionId
+      const reference = result?.reference || transactionId || 'ref'
+      const requestId = result?.requestId || transactionId || 'ref'
       const status = result?.status || 'PROCESSING'
 
       await refetchBalance()

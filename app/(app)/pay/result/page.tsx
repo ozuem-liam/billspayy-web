@@ -33,20 +33,23 @@ export default function ResultPage({ searchParams }: ResultPageProps) {
   const network = params.network || ''
 
   const [pollEnabled, setPollEnabled] = useState(
-    initialStatus === 'PROCESSING' || initialStatus === 'QUEUED'
+    initialStatus === 'PROCESSING' || initialStatus === 'QUEUED' || initialStatus === 'PENDING'
   )
   const [pollCount, setPollCount] = useState(0)
 
   const { data: requeryData } = useRequery(requestId, pollEnabled && !!requestId)
 
   const currentStatus = requeryData?.status || initialStatus
-  const isProcessing = currentStatus === 'PROCESSING' || currentStatus === 'QUEUED'
-  const isSuccess = currentStatus === 'SUCCESS'
+  const isProcessing =
+    currentStatus === 'PROCESSING' ||
+    currentStatus === 'QUEUED' ||
+    currentStatus === 'PENDING'
+  const isSuccess = currentStatus === 'SUCCESS' || currentStatus === 'SUCCESSFUL'
   const isFailed = currentStatus === 'FAILED'
 
   useEffect(() => {
     if (isSuccess || isFailed) setPollEnabled(false)
-    if (pollCount >= 10) setPollEnabled(false)
+    if (pollCount >= 20) setPollEnabled(false) // ~1 minute of polling
   }, [isSuccess, isFailed, pollCount])
 
   useEffect(() => {
