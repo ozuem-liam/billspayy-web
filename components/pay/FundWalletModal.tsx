@@ -47,7 +47,7 @@ export function FundWalletModal({ open, onClose }: FundWalletModalProps) {
     try {
       const { data } = await fundMutation.mutateAsync({
         amount, // naira — backend converts to kobo internally
-        paymentMethod: 'PAYSTACK',
+        paymentMethod: 'paystack',
       })
 
       const authUrl: string = data?.authorizationUrl || data?.data?.authorizationUrl
@@ -68,7 +68,7 @@ export function FundWalletModal({ open, onClose }: FundWalletModalProps) {
             // Verify payment
             if (reference) {
               try {
-                await verifyMutation.mutateAsync({ reference, paymentMethod: 'PAYSTACK' })
+                await verifyMutation.mutateAsync({ reference, paymentMethod: 'paystack' })
                 onClose()
               } catch {
                 toast('Payment not confirmed. Check your wallet balance.')
