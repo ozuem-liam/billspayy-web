@@ -178,7 +178,7 @@ function CablePageInner() {
         </Link>
         <div>
           <h1 className="text-xl font-bold text-gray-900">Cable TV</h1>
-          <p className="text-sm text-gray-500">Earn 2% commission on every payment</p>
+          <p className="text-sm text-gray-500">Earn 0.6% commission on every payment</p>
         </div>
       </div>
 

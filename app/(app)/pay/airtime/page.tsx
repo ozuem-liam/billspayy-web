@@ -103,7 +103,7 @@ function AirtimePageInner() {
         </Link>
         <div>
           <h1 className="text-xl font-bold text-gray-900">Buy Airtime</h1>
-          <p className="text-sm text-gray-500">Earn 2% commission on every purchase</p>
+          <p className="text-sm text-gray-500">Earn 0.6% commission on every purchase</p>
         </div>
       </div>
 

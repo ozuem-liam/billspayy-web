@@ -15,7 +15,7 @@ const FEATURES = [
     iconColor: 'text-green-600',
     iconBg: 'bg-green-50',
     title: 'Earn Commission',
-    description: 'Get 2% cash back on every bill you pay. The more you pay, the more you earn.',
+    description: 'Get 0.6% cash back on every bill you pay. The more you pay, the more you earn.',
   },
   {
     icon: Gift,
@@ -94,7 +94,7 @@ export default function LandingPage() {
               Every time.
             </h1>
             <p className="mb-8 text-lg text-gray-500 leading-relaxed">
-              BillsPayy lets you pay every household and mobile bill in one place — and earn 2% cash back on every single transaction.
+              BillsPayy lets you pay every household and mobile bill in one place — and earn 0.6% cash back on every single transaction.
             </p>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link href="/login">
@@ -190,7 +190,7 @@ export default function LandingPage() {
               {/* Second badge */}
               <div className="absolute -left-5 bottom-24 rounded-2xl bg-white px-3.5 py-2.5 shadow-xl shadow-gray-200/80">
                 <p className="text-xs text-gray-400">Commission rate</p>
-                <p className="text-base font-bold text-[#6C3CE1]">2% back</p>
+                <p className="text-base font-bold text-[#6C3CE1]">0.6% back</p>
               </div>
             </div>
           </div>

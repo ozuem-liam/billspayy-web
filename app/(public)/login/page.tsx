@@ -51,7 +51,7 @@ function LoginContent() {
         </div>
         <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2">
           <TrendingUp className="h-3.5 w-3.5 text-[#6C3CE1] shrink-0" />
-          <span className="text-xs text-gray-600">Earn 2% back</span>
+          <span className="text-xs text-gray-600">Earn 0.6% back</span>
         </div>
       </div>
 

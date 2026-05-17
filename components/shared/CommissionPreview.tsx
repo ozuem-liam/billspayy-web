@@ -3,17 +3,17 @@ import { formatAmountFromNaira } from '@/lib/utils'
 
 interface CommissionPreviewProps {
   amount: number // in naira
-  rate?: number // e.g. 0.02 for 2%
+  rate?: number // e.g. 0.006 for 0.6%
   commissionAmount?: number // override calculated amount (in naira)
   category?: string
 }
 
 // Default commission rates per category
 const COMMISSION_RATES: Record<string, number> = {
-  AIRTIME: 0.02,
-  DATA: 0.02,
-  ELECTRICITY: 0.02,
-  CABLETV: 0.02,
+  AIRTIME: 0.006,
+  DATA: 0.006,
+  ELECTRICITY: 0.006,
+  CABLETV: 0.006,
 }
 
 export function CommissionPreview({
@@ -22,7 +22,7 @@ export function CommissionPreview({
   commissionAmount,
   category = 'AIRTIME',
 }: CommissionPreviewProps) {
-  const effectiveRate = rate ?? COMMISSION_RATES[category.toUpperCase()] ?? 0.02
+  const effectiveRate = rate ?? COMMISSION_RATES[category.toUpperCase()] ?? 0.006
   const earned = commissionAmount ?? amount * effectiveRate
 
   if (!amount || amount <= 0) return null
@@ -39,7 +39,7 @@ export function CommissionPreview({
         </p>
       </div>
       <div className="ml-auto text-right">
-        <p className="text-xs text-green-600">{(effectiveRate * 100).toFixed(0)}% back</p>
+        <p className="text-xs text-green-600">{parseFloat((effectiveRate * 100).toFixed(1))}% back</p>
       </div>
     </div>
   )

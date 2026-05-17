@@ -62,10 +62,10 @@ export default function CommissionPage() {
               The more you pay, the higher your tier and the more you earn.
             </p>
             <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-blue-700">
-              <span>⚡ Electricity: ~2%</span>
-              <span>📱 Airtime: ~2%</span>
-              <span>📶 Data: ~2%</span>
-              <span>📺 Cable TV: ~2%</span>
+              <span>⚡ Electricity: ~0.6%</span>
+              <span>📱 Airtime: ~0.6%</span>
+              <span>📶 Data: ~0.6%</span>
+              <span>📺 Cable TV: ~0.6%</span>
             </div>
           </div>
         </div>
