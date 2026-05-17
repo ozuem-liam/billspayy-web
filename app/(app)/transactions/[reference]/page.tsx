@@ -233,29 +233,28 @@ export default function ReceiptPage({ params }: ReceiptPageProps) {
       </div>
 
       {/* Actions */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="space-y-3">
         <Button
           onClick={handleDownload}
-          className="bg-[#6C3CE1] hover:bg-[#5B32C7]"
+          className="w-full bg-[#6C3CE1] hover:bg-[#5B32C7]"
         >
           <Download className="mr-2 h-4 w-4" />
-          Download
+          Download Receipt
         </Button>
-        <Button
-          onClick={handleShare}
-          variant="outline"
-        >
-          <Share2 className="mr-2 h-4 w-4" />
-          Share
-        </Button>
-        <Button
-          variant="outline"
-          className="border-red-100 text-red-600 hover:bg-red-50 hover:border-red-200"
-          onClick={() => toast('Contact support@billspayy.com', { icon: '📧' })}
-        >
-          <AlertTriangle className="mr-2 h-4 w-4" />
-          Report
-        </Button>
+        <div className="grid grid-cols-2 gap-3">
+          <Button onClick={handleShare} variant="outline">
+            <Share2 className="mr-2 h-4 w-4" />
+            Share
+          </Button>
+          <Button
+            variant="outline"
+            className="border-red-100 text-red-600 hover:bg-red-50 hover:border-red-200"
+            onClick={() => toast('Contact support@billspayy.com', { icon: '📧' })}
+          >
+            <AlertTriangle className="mr-2 h-4 w-4" />
+            Report
+          </Button>
+        </div>
       </div>
     </div>
   )
