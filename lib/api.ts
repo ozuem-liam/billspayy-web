@@ -69,8 +69,8 @@ export function generateIdempotencyKey(): string {
 }
 
 export const walletApi = {
-  fund: (amount: number, paymentMethod: string, idempotencyKey?: string) =>
-    api.post('/wallet/fund', { amount, paymentMethod }, {
+  fund: (amount: number, paymentMethod: string, userEmail?: string, callbackUrl?: string, idempotencyKey?: string) =>
+    api.post('/wallet/fund', { amount, paymentMethod, userEmail, callbackUrl }, {
       headers: { 'Idempotency-Key': idempotencyKey ?? generateIdempotencyKey() },
     }),
   verify: (reference: string, trxref?: string, paymentMethod?: string) =>

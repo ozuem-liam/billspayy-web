@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, ChevronRight, ArrowUpRight, ArrowDownLeft, Clock, Wallet } from 'lucide-react'
 import { WalletCard } from '@/components/shared/WalletCard'
 import { FundWalletModal } from '@/components/pay/FundWalletModal'
 import { SkeletonRow } from '@/components/shared/SkeletonCard'
-import { useWalletBalance, useWalletTransactions } from '@/hooks/useWallet'
+import { useWalletBalance, useWalletTransactions, useVerifyWallet } from '@/hooks/useWallet'
 import { useAppStore } from '@/store'
 import { cn, formatAmountFromNaira, formatDate } from '@/lib/utils'
 import { IdentityGate } from '@/components/shared/IdentityGate'
@@ -14,9 +15,25 @@ import { IdentityGate } from '@/components/shared/IdentityGate'
 function WalletPageInner() {
   const walletBalance = useAppStore((s) => s.walletBalance)
   const [fundModalOpen, setFundModalOpen] = useState(false)
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const verifyMutation = useVerifyWallet()
+  const hasVerified = useRef(false)
 
   const { isLoading: balanceLoading } = useWalletBalance()
   const { data: transactions, isLoading: txnsLoading } = useWalletTransactions(10)
+
+  // Auto-verify when Paystack redirects back with ?reference=xxx
+  useEffect(() => {
+    const reference = searchParams.get('reference') || searchParams.get('trxref')
+    if (!reference || hasVerified.current) return
+    hasVerified.current = true
+    verifyMutation.mutateAsync({ reference, paymentMethod: 'paystack' }).finally(() => {
+      // Clean up the URL params
+      router.replace('/wallet')
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div className="space-y-5">

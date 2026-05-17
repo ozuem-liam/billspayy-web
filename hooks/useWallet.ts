@@ -38,11 +38,15 @@ export function useFundWallet() {
     mutationFn: async ({
       amount,
       paymentMethod,
+      userEmail,
+      callbackUrl,
     }: {
       amount: number
       paymentMethod: string
+      userEmail?: string
+      callbackUrl?: string
     }) => {
-      const { data } = await walletApi.fund(amount, paymentMethod)
+      const { data } = await walletApi.fund(amount, paymentMethod, userEmail, callbackUrl)
       return data
     },
     onSuccess: () => {
@@ -70,13 +74,17 @@ export function useVerifyWallet() {
       return data
     },
     onSuccess: (data) => {
-      const newBalance = data?.balance ?? data?.data?.balance
+      const newBalance = data?.balance ?? data?.data?.balance ?? data?.newBalance
       if (newBalance !== undefined) {
         setWalletBalance(newBalance)
       }
       queryClient.invalidateQueries({ queryKey: ['wallet-balance'] })
       queryClient.invalidateQueries({ queryKey: ['wallet-transactions'] })
-      toast.success('Wallet funded successfully!')
+      if (data?.success === true) {
+        toast.success('Wallet funded successfully!')
+      } else if (data?.success === false) {
+        toast.error('Payment was not completed. Please try again.')
+      }
     },
     onError: () => {
       toast.error('Failed to verify payment. Please contact support.')

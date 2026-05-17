@@ -9,7 +9,8 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { AmountInput } from '@/components/shared/AmountInput'
-import { useFundWallet, useVerifyWallet } from '@/hooks/useWallet'
+import { useFundWallet } from '@/hooks/useWallet'
+import { useAppStore } from '@/store'
 import toast from 'react-hot-toast'
 import { formatAmountFromNaira } from '@/lib/utils'
 
@@ -18,25 +19,10 @@ interface FundWalletModalProps {
   onClose: () => void
 }
 
-declare global {
-  interface Window {
-    PaystackPop?: {
-      setup: (config: {
-        key: string
-        email: string
-        amount: number
-        ref: string
-        onSuccess: (response: { reference: string; trxref: string }) => void
-        onCancel: () => void
-      }) => { openIframe: () => void }
-    }
-  }
-}
-
 export function FundWalletModal({ open, onClose }: FundWalletModalProps) {
   const [amount, setAmount] = useState(0)
   const fundMutation = useFundWallet()
-  const verifyMutation = useVerifyWallet()
+  const user = useAppStore((s) => s.user)
 
   const handleFund = async () => {
     if (amount < 100) {
@@ -45,37 +31,21 @@ export function FundWalletModal({ open, onClose }: FundWalletModalProps) {
     }
 
     try {
-      const { data } = await fundMutation.mutateAsync({
-        amount, // naira — backend converts to kobo internally
+      const callbackUrl = `${window.location.origin}/wallet`
+      const result = await fundMutation.mutateAsync({
+        amount,
         paymentMethod: 'paystack',
+        userEmail: user?.email,
+        callbackUrl,
       })
 
-      const authUrl: string = data?.authorizationUrl || data?.data?.authorizationUrl
-      const reference: string = data?.reference || data?.data?.reference
+      const authUrl: string = result?.authorizationUrl || result?.data?.authorizationUrl
 
       if (authUrl) {
-        // Open Paystack checkout in new tab
-        const popup = window.open(authUrl, '_blank')
-        if (!popup) {
-          toast.error('Please allow popups for payment')
-          return
-        }
-
-        // Poll for window close
-        const interval = setInterval(async () => {
-          if (popup.closed) {
-            clearInterval(interval)
-            // Verify payment
-            if (reference) {
-              try {
-                await verifyMutation.mutateAsync({ reference, paymentMethod: 'paystack' })
-                onClose()
-              } catch {
-                toast('Payment not confirmed. Check your wallet balance.')
-              }
-            }
-          }
-        }, 1000)
+        // Redirect in same tab — Paystack will return to callbackUrl with ?reference=xxx
+        window.location.href = authUrl
+      } else {
+        toast.error('Could not get payment link. Please try again.')
       }
     } catch (error) {
       console.error('Fund error:', error)
@@ -83,7 +53,7 @@ export function FundWalletModal({ open, onClose }: FundWalletModalProps) {
     }
   }
 
-  const isLoading = fundMutation.isPending || verifyMutation.isPending
+  const isLoading = fundMutation.isPending
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
