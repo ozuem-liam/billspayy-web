@@ -12,7 +12,7 @@ interface AppStore {
   tokenExpiry: number | null // epoch ms
 
   // Wallet
-  walletBalance: number | null // in kobo
+  walletBalance: number | null // in naira
 
   // Preferences
   lastNetworkUsed: string | null
@@ -21,7 +21,7 @@ interface AppStore {
 
   // Actions
   setAuth: (user: User, token: string) => void
-  setWalletBalance: (kobo: number) => void
+  setWalletBalance: (naira: number) => void
   clearAuth: () => void
   setLastNetwork: (network: string) => void
   setLastMeterNumber: (meter: string) => void
@@ -44,8 +44,8 @@ export const useAppStore = create<AppStore>()(
       setAuth: (user: User, token: string) =>
         set({ user, token, isAuthenticated: true, tokenExpiry: Date.now() + SESSION_DURATION_MS }),
 
-      setWalletBalance: (kobo: number) =>
-        set({ walletBalance: kobo }),
+      setWalletBalance: (naira: number) =>
+        set({ walletBalance: naira }),
 
       clearAuth: () =>
         set({

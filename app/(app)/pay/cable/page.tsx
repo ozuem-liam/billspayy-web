@@ -101,7 +101,7 @@ function CablePageInner() {
   })
 
   const amountKobo = selectedPlan ? selectedPlan.amount * 100 : 0
-  const hasEnoughBalance = walletBalance !== null && walletBalance >= amountKobo
+  const hasEnoughBalance = walletBalance !== null && walletBalance >= (selectedPlan?.amount ?? 0)
 
   const handleValidate = async () => {
     if (!cardNumber) {

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Eye, EyeOff, Plus, History } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { formatAmount } from '@/lib/utils'
+import { formatAmountFromNaira } from '@/lib/utils'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 
@@ -55,7 +55,7 @@ export function WalletCard({
             <Skeleton className="mt-1 h-10 w-44 bg-white/20" />
           ) : (
             <p className="mt-1 text-[2.25rem] font-bold tracking-tight leading-none">
-              {hidden ? '₦ ••••••' : balance !== null ? formatAmount(balance) : '₦ 0.00'}
+              {hidden ? '₦ ••••••' : balance !== null ? formatAmountFromNaira(balance) : '₦ 0.00'}
             </p>
           )}
           <p className="mt-2 text-xs text-purple-300 font-medium">Available balance</p>

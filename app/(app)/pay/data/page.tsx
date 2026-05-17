@@ -14,7 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useWalletBalance } from '@/hooks/useWallet'
 import { useAppStore } from '@/store'
 import { billsApi } from '@/lib/api'
-import { cn, formatAmount, formatAmountFromNaira } from '@/lib/utils'
+import { cn, formatAmountFromNaira } from '@/lib/utils'
 import toast from 'react-hot-toast'
 import type { NetworkProvider, DataPlan } from '@/types'
 import { IdentityGate } from '@/components/shared/IdentityGate'
@@ -51,7 +51,7 @@ function DataPageInner() {
   })
 
   const amountKobo = selectedPlan ? selectedPlan.amount * 100 : 0
-  const hasEnoughBalance = walletBalance !== null && walletBalance >= amountKobo
+  const hasEnoughBalance = walletBalance !== null && walletBalance >= (selectedPlan?.amount ?? 0)
   const canPay = network && phone.length >= 10 && selectedPlan
 
   const handlePinComplete = async (pin: string) => {
@@ -189,7 +189,7 @@ function DataPageInner() {
           <div className="rounded-xl border border-red-200 bg-red-50 p-4">
             <p className="text-sm font-medium text-red-700">Insufficient balance</p>
             <p className="text-xs text-red-600 mt-1">
-              Your balance: {formatAmount(walletBalance || 0)}
+              Your balance: {formatAmountFromNaira(walletBalance || 0)}
             </p>
           </div>
         )}

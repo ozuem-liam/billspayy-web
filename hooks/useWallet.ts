@@ -12,11 +12,10 @@ export function useWalletBalance() {
     queryKey: ['wallet-balance'],
     queryFn: async () => {
       const { data } = await walletApi.getBalance()
-      // Backend returns naira; store in kobo so formatAmount(kobo) and balance comparisons work correctly
+      // Backend returns naira; store naira directly in Zustand
       const balanceNaira = data?.data?.balance ?? data?.balance ?? 0
-      const balanceKobo = Math.round(balanceNaira * 100)
-      setWalletBalance(balanceKobo)
-      return balanceKobo
+      setWalletBalance(balanceNaira)
+      return balanceNaira
     },
     staleTime: 1000 * 30, // 30 seconds
   })

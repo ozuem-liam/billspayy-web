@@ -14,7 +14,7 @@ import { PinInput } from '@/components/shared/PinInput'
 import { useWalletBalance } from '@/hooks/useWallet'
 import { useAppStore } from '@/store'
 import { billsApi } from '@/lib/api'
-import { formatAmount } from '@/lib/utils'
+import { formatAmountFromNaira } from '@/lib/utils'
 import toast from 'react-hot-toast'
 import type { NetworkProvider } from '@/types'
 import { IdentityGate } from '@/components/shared/IdentityGate'
@@ -39,7 +39,7 @@ function AirtimePageInner() {
   const { refetch: refetchBalance } = useWalletBalance()
 
   const amountKobo = amount * 100
-  const hasEnoughBalance = walletBalance !== null && walletBalance >= amountKobo
+  const hasEnoughBalance = walletBalance !== null && walletBalance >= amount
   const canPay = network && phone.length >= 10 && amount >= 50
 
   const handlePinComplete = async (pin: string) => {
@@ -170,7 +170,7 @@ function AirtimePageInner() {
           <div className="rounded-xl border border-red-200 bg-red-50 p-4">
             <p className="text-sm font-medium text-red-700">Insufficient balance</p>
             <p className="text-xs text-red-600 mt-1">
-              Your balance: {formatAmount(walletBalance || 0)} · Need: {formatAmount(amountKobo)}
+              Your balance: {formatAmountFromNaira(walletBalance || 0)} · Need: {formatAmountFromNaira(amount)}
             </p>
           </div>
         )}
@@ -185,7 +185,7 @@ function AirtimePageInner() {
       {canPay && hasEnoughBalance && (
         <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100">
           <p className="mb-4 text-center text-sm font-medium text-gray-700">
-            Enter PIN to confirm payment of {formatAmount(amountKobo)}
+            Enter PIN to confirm payment of {formatAmountFromNaira(amount)}
           </p>
           <PinInput
             onComplete={handlePinComplete}
