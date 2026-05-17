@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useRef, useState } from 'react'
+import { use, useState } from 'react'
 import { ArrowLeft, Share2, AlertTriangle, Copy, Download } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -49,7 +49,6 @@ function getProviderName(serviceId: string | null | undefined): string | null {
 export default function ReceiptPage({ params }: ReceiptPageProps) {
   const { reference } = use(params)
   const { data: receipt, isLoading, error } = useReceipt(reference)
-  const receiptCardRef = useRef<HTMLDivElement>(null)
   const [downloading, setDownloading] = useState(false)
 
   const handleShare = async () => {
@@ -81,30 +80,69 @@ export default function ReceiptPage({ params }: ReceiptPageProps) {
   }
 
   const handleDownload = async () => {
-    if (!receipt || !receiptCardRef.current) return
+    if (!receipt) return
     setDownloading(true)
     try {
-      const html2canvas = (await import('html2canvas')).default
       const { jsPDF } = await import('jspdf')
 
-      const canvas = await html2canvas(receiptCardRef.current, {
-        scale: 3,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-      })
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' })
+      const margin = 60
+      let y = 60
 
-      const imgData = canvas.toDataURL('image/png')
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' })
+      doc.setFont('courier', 'normal')
+      doc.setTextColor('#111827')
 
-      const pageWidth = pdf.internal.pageSize.getWidth()
-      const imgWidth = pageWidth - 80
-      const imgHeight = (canvas.height * imgWidth) / canvas.width
+      const row = (label: string, value: string) => {
+        doc.setFontSize(11)
+        doc.text(`${label.padEnd(12)}: ${value}`, margin, y)
+        y += 18
+      }
 
-      pdf.addImage(imgData, 'PNG', 40, 40, imgWidth, imgHeight)
-      pdf.save(`billspayy-receipt-${reference}.pdf`)
+      const divider = (char = '-', len = 42) => {
+        doc.setFontSize(11)
+        doc.text(char.repeat(len), margin, y)
+        y += 18
+      }
+
+      // Title
+      doc.setFontSize(13)
+      doc.setFont('courier', 'bold')
+      doc.text('BILLSPAYY RECEIPT', margin, y)
+      y += 18
+      divider('=')
+      y += 6
+
+      // Main fields
+      row('Service', `${getCategoryLabel(receipt.category || '')}${receipt.serviceName ? ' · ' + receipt.serviceName : ''}`)
+      row('Amount', formatAmountFromNaira(receipt.amount))
+      row('Status', receipt.status ?? '')
+      row('Date', formatDate(receipt.createdAt))
+
+      y += 6
+
+      if (receipt.recipient)       row('Recipient', receipt.recipient)
+      if (receipt.meterNumber)     row('Meter No.', receipt.meterNumber)
+      if (receipt.customerName)    row('Customer', receipt.customerName)
+      if (receipt.customerAddress) row('Address', receipt.customerAddress)
+      if (receipt.token)           row('Token', receipt.token)
+      if (receipt.smartCardNumber) row('Smart Card', receipt.smartCardNumber)
+      if (providerName)            row('Provider', providerName)
+
+      y += 6
+      row('Reference', reference)
+      if (receipt.commission > 0)  row('Commission', `${formatAmountFromNaira(receipt.commission)} earned`)
+
+      y += 12
+      divider('-')
+      doc.setFont('courier', 'normal')
+      doc.setFontSize(10)
+      doc.setTextColor('#6B7280')
+      doc.text('Powered by BillsPayy · billspayy.com', margin, y)
+
+      doc.save(`billspayy-receipt-${reference}.pdf`)
       toast.success('Receipt downloaded!')
-    } catch {
+    } catch (err) {
+      console.error('PDF error:', err)
       toast.error('Could not generate PDF')
     } finally {
       setDownloading(false)
@@ -194,7 +232,7 @@ export default function ReceiptPage({ params }: ReceiptPageProps) {
         </div>
       </div>
 
-      <div ref={receiptCardRef} className="rounded-2xl bg-white border border-gray-100 overflow-hidden">
+      <div className="rounded-2xl bg-white border border-gray-100 overflow-hidden">
         {/* Status Hero */}
         <div className="px-6 pt-8 pb-6 text-center border-b border-gray-50">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-50 text-4xl">
