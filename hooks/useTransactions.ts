@@ -37,9 +37,13 @@ export function useReceipt(reference: string) {
     queryKey: ['receipt', reference],
     queryFn: async () => {
       const { data } = await transactionsApi.getReceipt(reference)
-      return data?.transaction || data?.data || data
+      // GlobalResponseInterceptor: { success, data: receiptObject }
+      const receipt = data?.data || data
+      if (!receipt?.reference) throw new Error('Receipt not found')
+      return receipt
     },
-    enabled: !!reference,
+    enabled: !!reference && reference !== 'ref',
+    retry: 1,
   })
 }
 
