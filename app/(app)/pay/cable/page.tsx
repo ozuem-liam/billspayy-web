@@ -148,13 +148,12 @@ function CablePageInner() {
       const result = data?.data || data
       const transactionId = result?.transactionId
       const reference = result?.reference || transactionId || 'ref'
-      const requestId = result?.requestId || transactionId || 'ref'
-      const status = result?.status || 'PROCESSING'
+      const status = result?.status || 'QUEUED'
 
       await refetchBalance()
 
       router.push(
-        `/pay/result?reference=${reference}&requestId=${requestId}&status=${status}&amount=${amountKobo}&category=CABLETV`
+        `/pay/result?reference=${reference}&status=${status}&amount=${amountKobo}&category=CABLETV`
       )
     } catch (error: any) {
       toast.dismiss('cable-pay')
