@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useRef } from 'react'
+import { use, useRef, useState } from 'react'
 import { ArrowLeft, Share2, AlertTriangle, Copy, Download } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -17,7 +17,8 @@ interface ReceiptPageProps {
 export default function ReceiptPage({ params }: ReceiptPageProps) {
   const { reference } = use(params)
   const { data: receipt, isLoading, error } = useReceipt(reference)
-  const printRef = useRef<HTMLDivElement>(null)
+  const receiptCardRef = useRef<HTMLDivElement>(null)
+  const [downloading, setDownloading] = useState(false)
 
   const handleShare = async () => {
     const lines = [
@@ -47,40 +48,40 @@ export default function ReceiptPage({ params }: ReceiptPageProps) {
     }
   }
 
-  const handleDownload = () => {
-    if (!receipt) return
+  const handleDownload = async () => {
+    if (!receipt || !receiptCardRef.current) return
+    setDownloading(true)
+    try {
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf'),
+      ])
 
-    const lines = [
-      `BILLSPAYY RECEIPT`,
-      `=================`,
-      ``,
-      `Service   : ${getCategoryLabel(receipt.category || '')}${receipt.serviceName ? ` · ${receipt.serviceName}` : ''}`,
-      `Amount    : ${formatAmountFromNaira(receipt.amount)}`,
-      `Status    : ${receipt.status}`,
-      `Date      : ${formatDate(receipt.createdAt)}`,
-      ``,
-      receipt.recipient   ? `Recipient : ${receipt.recipient}` : null,
-      receipt.meterNumber ? `Meter No. : ${receipt.meterNumber}` : null,
-      receipt.customerName    ? `Customer  : ${receipt.customerName}` : null,
-      receipt.customerAddress ? `Address   : ${receipt.customerAddress}` : null,
-      receipt.token           ? `Token     : ${receipt.token}` : null,
-      receipt.smartCardNumber ? `Smart Card: ${receipt.smartCardNumber}` : null,
-      ``,
-      `Reference : ${reference}`,
-      receipt.commission > 0 ? `Commission: ${formatAmountFromNaira(receipt.commission)} earned` : null,
-      ``,
-      `─────────────────────────────────────`,
-      `Powered by BillsPayy · billspayy.com`,
-    ].filter((l) => l !== null).join('\n')
+      const canvas = await html2canvas(receiptCardRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+      })
 
-    const blob = new Blob([lines], { type: 'text/plain' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `billspayy-receipt-${reference}.txt`
-    a.click()
-    URL.revokeObjectURL(url)
-    toast.success('Receipt downloaded!')
+      const imgData = canvas.toDataURL('image/png')
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'px', format: 'a4' })
+
+      const pageWidth = pdf.internal.pageSize.getWidth()
+      const pageHeight = pdf.internal.pageSize.getHeight()
+      const imgWidth = pageWidth - 40 // 20px padding each side
+      const imgHeight = (canvas.height * imgWidth) / canvas.width
+
+      // Centre vertically if it fits, otherwise start from top with padding
+      const yOffset = imgHeight < pageHeight ? (pageHeight - imgHeight) / 2 : 20
+
+      pdf.addImage(imgData, 'PNG', 20, yOffset, imgWidth, imgHeight)
+      pdf.save(`billspayy-receipt-${reference}.pdf`)
+      toast.success('PDF downloaded!')
+    } catch (e) {
+      toast.error('Could not generate PDF')
+    } finally {
+      setDownloading(false)
+    }
   }
 
   if (isLoading) {
@@ -136,7 +137,7 @@ export default function ReceiptPage({ params }: ReceiptPageProps) {
   ].filter(Boolean) as Array<{ label: string; value: string; mono?: boolean; copiable?: boolean; highlight?: boolean }>
 
   return (
-    <div className="space-y-4" ref={printRef}>
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link href="/transactions">
@@ -149,8 +150,9 @@ export default function ReceiptPage({ params }: ReceiptPageProps) {
         <div className="flex items-center gap-1">
           <button
             onClick={handleDownload}
-            className="rounded-full p-3 hover:bg-gray-100 transition"
-            title="Download receipt"
+            disabled={downloading}
+            className="rounded-full p-3 hover:bg-gray-100 transition disabled:opacity-50"
+            title="Download PDF"
           >
             <Download className="h-5 w-5 text-gray-500" />
           </button>
@@ -164,7 +166,14 @@ export default function ReceiptPage({ params }: ReceiptPageProps) {
         </div>
       </div>
 
-      <div className="rounded-2xl bg-white border border-gray-100 overflow-hidden">
+      {/* This div is captured by html2canvas */}
+      <div ref={receiptCardRef} className="rounded-2xl bg-white border border-gray-100 overflow-hidden">
+        {/* Brand header — visible in PDF */}
+        <div className="px-5 py-3 bg-[#6C3CE1] flex items-center justify-between">
+          <span className="text-white font-bold text-base tracking-wide">BillsPayy</span>
+          <span className="text-white/70 text-xs">Official Receipt</span>
+        </div>
+
         {/* Status Hero */}
         <div className="px-6 pt-8 pb-6 text-center border-b border-gray-50">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-50 text-4xl">
@@ -222,7 +231,7 @@ export default function ReceiptPage({ params }: ReceiptPageProps) {
 
         {/* Commission */}
         {receipt.commission > 0 && (
-          <div className="mx-5 mb-5 mt-3 rounded-xl border border-green-100 bg-green-50 px-4 py-3.5">
+          <div className="mx-5 mt-3 rounded-xl border border-green-100 bg-green-50 px-4 py-3.5">
             <p className="text-xs font-semibold uppercase tracking-wide text-green-600 mb-2">Commission Earned</p>
             <div className="flex items-center justify-between">
               <p className="text-sm text-green-700">You earned</p>
@@ -230,16 +239,22 @@ export default function ReceiptPage({ params }: ReceiptPageProps) {
             </div>
           </div>
         )}
+
+        {/* PDF footer */}
+        <div className="px-5 py-3 mt-3 border-t border-gray-50 text-center">
+          <p className="text-xs text-gray-300">billspayy.com · {formatDate(receipt.createdAt)}</p>
+        </div>
       </div>
 
       {/* Actions */}
       <div className="space-y-3">
         <Button
           onClick={handleDownload}
-          className="w-full bg-[#6C3CE1] hover:bg-[#5B32C7]"
+          disabled={downloading}
+          className="w-full bg-[#6C3CE1] hover:bg-[#5B32C7] disabled:opacity-60"
         >
           <Download className="mr-2 h-4 w-4" />
-          Download Receipt
+          {downloading ? 'Generating PDF…' : 'Download Receipt (PDF)'}
         </Button>
         <div className="grid grid-cols-2 gap-3">
           <Button onClick={handleShare} variant="outline">
