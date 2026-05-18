@@ -24,12 +24,14 @@ async function getKey(): Promise<CryptoKey> {
   return _cachedKey
 }
 
-function toBase64(buf: ArrayBuffer): string {
-  return btoa(String.fromCharCode(...new Uint8Array(buf)))
+function toBase64(buf: ArrayBuffer | Uint8Array): string {
+  const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf)
+  return btoa(String.fromCharCode(...bytes))
 }
 
-function fromBase64(b64: string): Uint8Array {
-  return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))
+function fromBase64(b64: string): Uint8Array<ArrayBuffer> {
+  const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))
+  return new Uint8Array(bytes.buffer as ArrayBuffer)
 }
 
 export interface EncryptedPayload {
@@ -82,7 +84,7 @@ export async function decryptResponse(payload: unknown): Promise<unknown> {
   const tag = fromBase64(payload.tag)
 
   // Web Crypto expects ciphertext + tag concatenated
-  const combined = new Uint8Array(ciphertext.length + tag.length)
+  const combined = new Uint8Array(new ArrayBuffer(ciphertext.length + tag.length))
   combined.set(ciphertext)
   combined.set(tag, ciphertext.length)
 
