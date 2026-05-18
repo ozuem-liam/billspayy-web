@@ -161,10 +161,11 @@ function ElectricityPageInner() {
     try {
       const { data } = await billsApi.validateElectricity(meterNumber, serviceId)
       const result = data?.data || data
+      const detail = result.detail || {}
       const isMdEligible = result.mdEnabled || false
       setValidated({
-        customerName: result.customerName || result.name,
-        customerAddress: result.customerAddress || result.address || '',
+        customerName: result.customerName || detail.name || result.name || '',
+        customerAddress: result.customerAddress || detail.address || result.address || '',
         customerAccountId: meterNumber,
         mdEnabled: isMdEligible,
         mdCapValueKobo: result.mdCapValueKobo || 0,
