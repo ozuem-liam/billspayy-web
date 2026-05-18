@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { useAppStore } from '@/store'
+import { encryptPayload, decryptResponse } from './encryption'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005'
 
@@ -10,23 +11,29 @@ export const api = axios.create({
   },
 })
 
-// Request interceptor: add Authorization header
+// Request interceptor: add Authorization header + encrypt body
 api.interceptors.request.use(
-  (config) => {
+  async (config) => {
     if (typeof window !== 'undefined') {
       const { token } = useAppStore.getState()
       if (token) {
         config.headers.Authorization = `Bearer ${token}`
       }
     }
+    if (config.data && typeof config.data === 'object') {
+      config.data = await encryptPayload(config.data)
+    }
     return config
   },
   (error) => Promise.reject(error)
 )
 
-// Response interceptor: on 401 clear auth and redirect to login
+// Response interceptor: decrypt body, then handle 401
 api.interceptors.response.use(
-  (res) => res,
+  async (res) => {
+    res.data = await decryptResponse(res.data)
+    return res
+  },
   (error) => {
     if (error.response?.status === 401 && typeof window !== 'undefined') {
       useAppStore.getState().clearAuth()
