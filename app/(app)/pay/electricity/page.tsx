@@ -67,18 +67,24 @@ const DISCO_LOGOS: Record<string, string> = {
 }
 
 const FALLBACK_DISCOS = [
-  { name: 'Ikeja Electric - IKEDC',       serviceId: 'ikeja-electric' },
-  { name: 'Eko Electric - EKEDC',          serviceId: 'eko-electric' },
-  { name: 'Abuja Electric - AEDC',         serviceId: 'abuja-electric' },
-  { name: 'Port Harcourt Electric - PHED', serviceId: 'portharcourt-electric' },
-  { name: 'Ibadan Electric - IBEDC',       serviceId: 'ibadan-electric' },
-  { name: 'Enugu Electric - EEDC',         serviceId: 'enugu-electric' },
-  { name: 'Kaduna Electric - KAEDCO',      serviceId: 'kaduna-electric' },
-  { name: 'Kano Electric - KEDC',          serviceId: 'kano-electric' },
-  { name: 'Jos Electric - JED',            serviceId: 'jos-electric' },
-  { name: 'Benin Electric - BEDC',         serviceId: 'benin-electric' },
-  { name: 'Aba Electric - ABEDC',          serviceId: 'aba-electric' },
-  { name: 'Yola Electric - YEDC',          serviceId: 'yola-electric' },
+  { name: 'Ikeja Electric - IKEDC (Prepaid)',       serviceId: 'E01E' },
+  { name: 'Ikeja Electric - IKEDC (Postpaid)',      serviceId: 'E02E' },
+  { name: 'Ibadan Electric - IBEDC (Prepaid)',      serviceId: 'E03E' },
+  { name: 'Ibadan Electric - IBEDC (Postpaid)',     serviceId: 'E04E' },
+  { name: 'Eko Electric - EKEDC (Prepaid)',         serviceId: 'E05E' },
+  { name: 'Eko Electric - EKEDC (Postpaid)',        serviceId: 'E06E' },
+  { name: 'Abuja Electric - AEDC (Prepaid)',        serviceId: 'E07E' },
+  { name: 'Abuja Electric - AEDC (Postpaid)',       serviceId: 'E08E' },
+  { name: 'Port Harcourt Electric - PHED (Prepaid)', serviceId: 'E09E' },
+  { name: 'Port Harcourt Electric - PHED (Postpaid)', serviceId: 'E10E' },
+  { name: 'Kaduna Electric - KAEDCO (Prepaid)',     serviceId: 'E11E' },
+  { name: 'Kaduna Electric - KAEDCO (Postpaid)',    serviceId: 'E12E' },
+  { name: 'Jos Electric - JED (Prepaid)',           serviceId: 'E13E' },
+  { name: 'Jos Electric - JED (Postpaid)',          serviceId: 'E14E' },
+  { name: 'Enugu Electric - EEDC (Prepaid)',        serviceId: 'E15E' },
+  { name: 'Enugu Electric - EEDC (Postpaid)',       serviceId: 'E16E' },
+  { name: 'Kano Electric - KEDC (Prepaid)',         serviceId: 'E17E' },
+  { name: 'Kano Electric - KEDC (Postpaid)',        serviceId: 'E18E' },
 ]
 
 function DiscoLogo({ serviceId, name }: { serviceId: string; name: string }) {
