@@ -98,6 +98,7 @@ export function getStatusColor(status: string): string {
     QUEUED: 'text-amber-600 bg-amber-50',
     PENDING: 'text-amber-600 bg-amber-50',
     REFUNDED: 'text-blue-600 bg-blue-50',
+    REVERSED: 'text-orange-600 bg-orange-50',
   }
   return map[status?.toUpperCase()] || 'text-gray-600 bg-gray-50'
 }
@@ -110,6 +111,7 @@ export function getStatusLabel(status: string): string {
     QUEUED: 'Processing',
     PENDING: 'Pending',
     REFUNDED: 'Refunded',
+    REVERSED: 'Reversed',
   }
   return map[status?.toUpperCase()] || status
 }
