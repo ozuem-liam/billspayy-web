@@ -62,6 +62,7 @@ export function useRequery(requestId: string, enabled = true) {
         status === 'SUCCESS' ||
         status === 'SUCCESSFUL' ||
         status === 'FAILED' ||
+        status === 'REVERSED' ||
         status === 'NOT_FOUND'
       ) return false
       return 3000
