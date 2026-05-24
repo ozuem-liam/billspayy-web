@@ -10,11 +10,22 @@ export function useLeaderboard(params?: {
   limit?: number
   page?: number
 }) {
+  const user = useAppStore((s) => s.user)
+
   return useQuery({
     queryKey: ['leaderboard', params],
     queryFn: async () => {
-      const { data } = await analyticsApi.getLeaderboard(params)
-      return data?.leaderboard || data?.data || []
+      const { data } = await analyticsApi.getLeaderboard({
+        ...params,
+        userId: user?.supabaseId || undefined,
+      })
+      // GlobalResponseInterceptor wraps: { success, data: { leaderboard, currentUser, pagination } }
+      const result = data?.data || data
+      return {
+        leaderboard: result?.leaderboard || [],
+        currentUser: result?.currentUser || null,
+        pagination: result?.pagination || null,
+      }
     },
     staleTime: 1000 * 60 * 5,
   })
@@ -29,8 +40,6 @@ export function useTierInfo() {
       if (!user?.id) throw new Error('No user ID')
       const { data } = await analyticsApi.getTier(user.id)
       const raw = data?.data || data
-      // Normalize backend shape { currentTier: { name }, progress: { progressPercentage, amountToNextTier }, nextTier: { name } }
-      // to the flat shape the dashboard expects
       return {
         currentTier: raw?.currentTier?.name?.toUpperCase() || 'BRONZE',
         progress: raw?.progress?.progressPercentage ?? 0,

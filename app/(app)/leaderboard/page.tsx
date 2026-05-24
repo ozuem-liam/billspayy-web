@@ -18,16 +18,16 @@ export default function LeaderboardPage() {
   const [timeRange, setTimeRange] = useState('30d')
   const [category, setCategory] = useState('ALL')
 
-  const { data: leaderboard, isLoading: lbLoading } = useLeaderboard({
+  const { data: lbData, isLoading: lbLoading } = useLeaderboard({
     timeRange,
     category: category === 'ALL' ? undefined : category,
     limit: 50,
   })
   const { data: tierInfo, isLoading: tierLoading } = useTierInfo()
 
-  const entries = Array.isArray(leaderboard) ? leaderboard : []
-  const myEntry = entries.find((e: any) => e.isCurrentUser || e.userId === user?.id)
-  const myRank = myEntry?.rank || '—'
+  const entries = lbData?.leaderboard || []
+  const currentUser = lbData?.currentUser
+  const myRank = currentUser?.rank || '—'
 
   return (
     <div className="space-y-6">
@@ -53,9 +53,9 @@ export default function LeaderboardPage() {
               </div>
               <TierBadge tier={tierInfo?.currentTier || 'BRONZE'} size="md" />
             </div>
-            {myEntry && (
+            {currentUser?.stats && (
               <p className="text-sm text-purple-200 mb-3">
-                {formatAmount(myEntry.totalSpend)} spent · {myEntry.transactionCount} bills
+                {formatAmount(currentUser.stats.totalSpent || 0)} spent · {currentUser.stats.transactionCount || 0} bills
               </p>
             )}
             {tierInfo?.nextTier && (
@@ -63,7 +63,7 @@ export default function LeaderboardPage() {
                 <Progress value={tierInfo.progress || 0} className="h-2 bg-white/20 mb-2" />
                 <div className="flex justify-between text-xs text-purple-200">
                   <span>{tierInfo.progress?.toFixed(0)}% to {tierInfo.nextTier}</span>
-                  {tierInfo.remainingAmount && (
+                  {tierInfo.remainingAmount != null && (
                     <span>{formatAmount(tierInfo.remainingAmount)} more</span>
                   )}
                 </div>
@@ -97,7 +97,7 @@ export default function LeaderboardPage() {
               key={cat}
               onClick={() => setCategory(cat)}
               className={cn(
-                'flex-shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition',
+                'shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition',
                 category === cat
                   ? 'bg-gray-900 text-white'
                   : 'bg-white text-gray-600 border border-gray-200'
@@ -113,7 +113,7 @@ export default function LeaderboardPage() {
       <div className="rounded-xl bg-white shadow-sm border border-gray-100 divide-y divide-gray-50">
         <div className="px-4 py-3">
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-            🏆 Top Spenders
+            Top Spenders
           </p>
         </div>
         {lbLoading ? (
@@ -121,13 +121,15 @@ export default function LeaderboardPage() {
         ) : entries.length === 0 ? (
           <div className="py-10 text-center">
             <p className="text-3xl mb-2">🏆</p>
-            <p className="text-sm text-gray-500">No leaderboard data</p>
+            <p className="text-sm text-gray-500">No leaderboard data yet</p>
           </div>
         ) : (
           entries.map((entry: any, idx: number) => {
             const isMe = entry.isCurrentUser || entry.userId === user?.id
             const rank = entry.rank || idx + 1
-            const tier = entry.tier || 'BRONZE'
+            const tier = entry.tier || 'bronze'
+            const totalSpent = entry.stats?.totalSpent || 0
+            const txCount = entry.stats?.transactionCount || 0
 
             return (
               <div
@@ -138,7 +140,7 @@ export default function LeaderboardPage() {
                 )}
               >
                 {/* Rank */}
-                <div className="w-8 flex-shrink-0 text-center">
+                <div className="w-8 shrink-0 text-center">
                   {rank <= 3 ? (
                     <span className="text-xl">
                       {rank === 1 ? '🥇' : rank === 2 ? '🥈' : '🥉'}
@@ -151,19 +153,19 @@ export default function LeaderboardPage() {
                 </div>
 
                 {/* Tier badge */}
-                <span className="text-xl flex-shrink-0">{getTierBadge(tier)}</span>
+                <span className="text-xl shrink-0">{getTierBadge(tier)}</span>
 
                 {/* Name */}
                 <div className="min-w-0 flex-1">
                   <p className={cn('text-sm font-medium', isMe ? 'text-[#6C3CE1]' : 'text-gray-900')}>
-                    {isMe ? 'You' : entry.maskedName || entry.name}
+                    {isMe ? 'You' : entry.displayName || entry.name}
                   </p>
-                  <p className="text-xs text-gray-500">{entry.transactionCount} bills</p>
+                  <p className="text-xs text-gray-500">{txCount} bills</p>
                 </div>
 
                 {/* Amount */}
-                <p className={cn('text-sm font-semibold flex-shrink-0', isMe ? 'text-[#6C3CE1]' : 'text-gray-900')}>
-                  {formatAmount(entry.totalSpend || 0)}
+                <p className={cn('text-sm font-semibold shrink-0', isMe ? 'text-[#6C3CE1]' : 'text-gray-900')}>
+                  {formatAmount(totalSpent)}
                 </p>
               </div>
             )

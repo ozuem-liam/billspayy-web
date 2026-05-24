@@ -184,6 +184,7 @@ export const referralsApi = {
 
 export const analyticsApi = {
   getLeaderboard: (params?: {
+    userId?: string
     timeRange?: string
     category?: string
     limit?: number
