@@ -55,7 +55,12 @@ export const authApi = {
     nin?: string
     bvn?: string
     referralCode?: string
+    passwordHash?: string
   }) => api.post('/auth/register', data),
+  signup: (email: string, password: string, name: string) =>
+    api.post('/auth/signup', { email, password, name }),
+  login: (email: string, password: string) =>
+    api.post('/auth/login', { email, password }),
 }
 
 export const userApi = {
@@ -65,6 +70,10 @@ export const userApi = {
     api.put('/user/update-pin', { oldPin, newPin }),
   verifyIdentity: (type: 'NIN' | 'BVN', value: string) =>
     api.post('/user/verify-identity', { type, value }),
+  setPassword: (password: string) =>
+    api.post('/user/set-password', { password }),
+  updatePassword: (oldPassword: string, newPassword: string) =>
+    api.put('/user/update-password', { oldPassword, newPassword }),
 }
 
 /** Generate a stable idempotency key for a mutating request.

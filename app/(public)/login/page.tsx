@@ -1,15 +1,25 @@
 'use client'
 
-import { Suspense, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
-import { Zap, Shield, TrendingUp } from 'lucide-react'
+import { Suspense, useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Zap, Shield, TrendingUp, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { useAppStore } from '@/store'
+import { authApi } from '@/lib/api'
 import toast from 'react-hot-toast'
+import Link from 'next/link'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005'
 
 function LoginContent() {
+  const router = useRouter()
   const searchParams = useSearchParams()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (searchParams.get('error') === 'cancelled') {
@@ -21,8 +31,94 @@ function LoginContent() {
     window.location.href = `${API_URL}/auth/google`
   }
 
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email || !password) {
+      toast.error('Please enter your email and password')
+      return
+    }
+    setLoading(true)
+    try {
+      const { data } = await authApi.login(email, password)
+      const result = data?.data || data
+
+      if (result?.incomplete && result?.pendingToken) {
+        // Registration not finished — redirect to register flow
+        router.push(`/register?pending=${result.pendingToken}`)
+        return
+      }
+
+      if (result?.token && result?.user) {
+        useAppStore.getState().setAuth(result.user, result.token)
+        router.replace('/dashboard')
+      } else {
+        toast.error('Unexpected response. Please try again.')
+      }
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Login failed. Please check your credentials.'
+      toast.error(msg)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="rounded-2xl bg-white p-8 shadow-sm border border-gray-100">
+      {/* Email/Password form */}
+      <form onSubmit={handleEmailLogin} className="space-y-4">
+        <div>
+          <Label className="text-sm text-gray-600">Email</Label>
+          <Input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            className="mt-1.5"
+            disabled={loading}
+          />
+        </div>
+        <div>
+          <Label className="text-sm text-gray-600">Password</Label>
+          <div className="relative mt-1.5">
+            <Input
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              disabled={loading}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
+        <Button
+          type="submit"
+          size="lg"
+          className="w-full h-11 bg-[#6C3CE1] hover:bg-[#5B32C7] font-medium"
+          disabled={loading}
+        >
+          {loading ? 'Signing in...' : 'Sign in'}
+        </Button>
+      </form>
+
+      <p className="mt-4 text-center text-sm text-gray-500">
+        Don&apos;t have an account?{' '}
+        <Link href="/signup" className="font-medium text-[#6C3CE1] hover:underline">
+          Sign up
+        </Link>
+      </p>
+
+      <div className="my-5 flex items-center gap-4">
+        <div className="h-px flex-1 bg-gray-100" />
+        <span className="text-xs text-gray-400">or</span>
+        <div className="h-px flex-1 bg-gray-100" />
+      </div>
+
       <Button
         onClick={handleGoogleLogin}
         size="lg"
@@ -37,12 +133,6 @@ function LoginContent() {
         </svg>
         Continue with Google
       </Button>
-
-      <div className="mt-6 flex items-center gap-4">
-        <div className="h-px flex-1 bg-gray-100" />
-        <span className="text-xs text-gray-400">Secure sign-in</span>
-        <div className="h-px flex-1 bg-gray-100" />
-      </div>
 
       <div className="mt-5 grid grid-cols-2 gap-3">
         <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2">

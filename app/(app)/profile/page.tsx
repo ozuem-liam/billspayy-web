@@ -56,6 +56,12 @@ export default function ProfilePage() {
   const [identityType, setIdentityType] = useState<'NIN' | 'BVN'>('NIN')
   const [identityLoading, setIdentityLoading] = useState(false)
   const [smsNotifications, setSmsNotifications] = useState(true)
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [passwordMode, setPasswordMode] = useState<'set' | 'update'>('set')
+  const [oldPassword, setOldPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmNewPassword, setConfirmNewPassword] = useState('')
+  const [passwordLoading, setPasswordLoading] = useState(false)
 
   const identityForm = useForm<IdentityForm>({
     resolver: zodResolver(identitySchema),
@@ -121,6 +127,53 @@ export default function ProfilePage() {
       toast.error('Verification failed. Please check your details.')
     } finally {
       setIdentityLoading(false)
+    }
+  }
+
+  const handlePasswordSubmit = async () => {
+    if (passwordMode === 'set') {
+      if (!newPassword || newPassword.length < 6) {
+        toast.error('Password must be at least 6 characters')
+        return
+      }
+      if (newPassword !== confirmNewPassword) {
+        toast.error('Passwords do not match')
+        return
+      }
+      setPasswordLoading(true)
+      try {
+        await userApi.setPassword(newPassword)
+        toast.success('Password set! You can now log in with email and password.')
+        setShowPasswordModal(false)
+        setNewPassword('')
+        setConfirmNewPassword('')
+      } catch (err: any) {
+        toast.error(err?.response?.data?.message || 'Failed to set password')
+      } finally {
+        setPasswordLoading(false)
+      }
+    } else {
+      if (!oldPassword || !newPassword || newPassword.length < 6) {
+        toast.error('Please fill in all fields (min 6 characters)')
+        return
+      }
+      if (newPassword !== confirmNewPassword) {
+        toast.error('Passwords do not match')
+        return
+      }
+      setPasswordLoading(true)
+      try {
+        await userApi.updatePassword(oldPassword, newPassword)
+        toast.success('Password updated!')
+        setShowPasswordModal(false)
+        setOldPassword('')
+        setNewPassword('')
+        setConfirmNewPassword('')
+      } catch (err: any) {
+        toast.error(err?.response?.data?.message || 'Failed to update password')
+      } finally {
+        setPasswordLoading(false)
+      }
     }
   }
 
@@ -233,6 +286,26 @@ export default function ProfilePage() {
           <ChevronRight className="h-4 w-4 text-gray-300 shrink-0" />
         </button>
 
+        {/* Set / Change Password */}
+        <button
+          onClick={() => {
+            setPasswordMode('set') // Will be overridden below if password already exists
+            setShowPasswordModal(true)
+            setOldPassword('')
+            setNewPassword('')
+            setConfirmNewPassword('')
+          }}
+          className="flex w-full items-center justify-between px-5 py-3.5 border-t border-gray-50 hover:bg-gray-50/60 transition"
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-50">
+              <Lock className="h-4 w-4 text-gray-500" />
+            </div>
+            <p className="text-sm font-medium text-gray-900">Set Password</p>
+          </div>
+          <ChevronRight className="h-4 w-4 text-gray-300 shrink-0" />
+        </button>
+
         {/* Referrals shortcut */}
         <Link href="/referrals" className="flex items-center justify-between px-5 py-3.5 border-t border-gray-50 hover:bg-gray-50/60 transition">
           <div className="flex items-center gap-3">
@@ -332,6 +405,61 @@ export default function ProfilePage() {
                 error={pinError}
               />
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Set / Change Password Modal */}
+      <Dialog open={showPasswordModal} onOpenChange={setShowPasswordModal}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{passwordMode === 'set' ? 'Set Password' : 'Change Password'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            {passwordMode === 'update' && (
+              <div>
+                <Label className="text-sm text-gray-600">Current Password</Label>
+                <Input
+                  type="password"
+                  value={oldPassword}
+                  onChange={(e) => setOldPassword(e.target.value)}
+                  placeholder="Enter current password"
+                  className="mt-1.5"
+                />
+              </div>
+            )}
+            <div>
+              <Label className="text-sm text-gray-600">
+                {passwordMode === 'set' ? 'Password' : 'New Password'}
+              </Label>
+              <Input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="At least 6 characters"
+                className="mt-1.5"
+              />
+            </div>
+            <div>
+              <Label className="text-sm text-gray-600">Confirm Password</Label>
+              <Input
+                type="password"
+                value={confirmNewPassword}
+                onChange={(e) => setConfirmNewPassword(e.target.value)}
+                placeholder="Re-enter password"
+                className="mt-1.5"
+              />
+            </div>
+            <p className="text-xs text-gray-400">
+              This lets you sign in with your email and password in addition to Google.
+            </p>
+            <Button
+              onClick={handlePasswordSubmit}
+              disabled={passwordLoading}
+              className="w-full bg-[#6C3CE1] hover:bg-[#5B32C7]"
+            >
+              {passwordLoading ? 'Saving...' : passwordMode === 'set' ? 'Set Password' : 'Update Password'}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

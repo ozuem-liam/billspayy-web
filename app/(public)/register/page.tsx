@@ -21,6 +21,8 @@ interface GoogleOnboardData {
   email: string
   name: string
   picture: string
+  isEmailSignup?: boolean
+  passwordHash?: string
 }
 
 const profileSchema = z.object({
@@ -67,6 +69,8 @@ function RegisterPageInner() {
           email: payload.email,
           name: payload.name || '',
           picture: payload.picture || '',
+          isEmailSignup: payload.isEmailSignup || false,
+          passwordHash: payload.passwordHash || undefined,
         }
         sessionStorage.setItem('google_onboard', JSON.stringify(data))
         setGoogleData(data)
@@ -134,6 +138,7 @@ function RegisterPageInner() {
         nin: identityType === 'NIN' ? identityValue : undefined,
         bvn: identityType === 'BVN' ? identityValue : undefined,
         referralCode: profileData.referralCode || undefined,
+        passwordHash: googleData.passwordHash || undefined,
       })
 
       const { user, accessToken } = res.data
@@ -214,14 +219,22 @@ function RegisterPageInner() {
                 <p className="mt-1 text-sm text-gray-500">Confirm your details to continue</p>
               </div>
 
-              <div className="flex justify-center">
-                <Avatar className="h-20 w-20 ring-4 ring-gray-50">
-                  <AvatarImage src={googleData.picture} />
-                  <AvatarFallback className="bg-gradient-to-br from-[#6C3CE1] to-[#4A2BA0] text-2xl text-white font-bold">
-                    {googleData.name?.charAt(0) || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-              </div>
+              {googleData.picture ? (
+                <div className="flex justify-center">
+                  <Avatar className="h-20 w-20 ring-4 ring-gray-50">
+                    <AvatarImage src={googleData.picture} />
+                    <AvatarFallback className="bg-gradient-to-br from-[#6C3CE1] to-[#4A2BA0] text-2xl text-white font-bold">
+                      {googleData.name?.charAt(0) || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+              ) : (
+                <div className="flex justify-center">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-[#6C3CE1] to-[#4A2BA0] ring-4 ring-gray-50">
+                    <span className="text-2xl font-bold text-white">{googleData.name?.charAt(0) || googleData.email?.charAt(0) || 'U'}</span>
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-4">
                 <div>
