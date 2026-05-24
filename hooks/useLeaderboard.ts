@@ -10,15 +10,10 @@ export function useLeaderboard(params?: {
   limit?: number
   page?: number
 }) {
-  const user = useAppStore((s) => s.user)
-
   return useQuery({
     queryKey: ['leaderboard', params],
     queryFn: async () => {
-      const { data } = await analyticsApi.getLeaderboard({
-        ...params,
-        userId: user?.supabaseId || undefined,
-      })
+      const { data } = await analyticsApi.getLeaderboard(params)
       // GlobalResponseInterceptor wraps: { success, data: { leaderboard, currentUser, pagination } }
       const result = data?.data || data
       return {
