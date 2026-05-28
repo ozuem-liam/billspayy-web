@@ -13,19 +13,23 @@ import Link from 'next/link'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005'
 
-function LoginContent() {
-  const router = useRouter()
+// Isolated to its own Suspense boundary so useSearchParams doesn't block the form
+function CancelledToast() {
   const searchParams = useSearchParams()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
-
   useEffect(() => {
     if (searchParams.get('error') === 'cancelled') {
       toast.error('Sign in was cancelled.')
     }
   }, [searchParams])
+  return null
+}
+
+function LoginContent() {
+  const router = useRouter()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   const handleGoogleLogin = () => {
     window.location.href = `${API_URL}/auth/google`
@@ -158,6 +162,9 @@ function LoginContent() {
 export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#F8F7FF] px-4">
+      <Suspense fallback={null}>
+        <CancelledToast />
+      </Suspense>
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#6C3CE1] to-[#4A2BA0] shadow-lg shadow-purple-200">
@@ -166,9 +173,7 @@ export default function LoginPage() {
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Welcome back</h1>
           <p className="mt-1.5 text-sm text-gray-500">Sign in to pay bills and earn rewards</p>
         </div>
-        <Suspense fallback={<div className="rounded-2xl bg-white border border-gray-100 p-8 h-40" />}>
-          <LoginContent />
-        </Suspense>
+        <LoginContent />
       </div>
     </div>
   )
