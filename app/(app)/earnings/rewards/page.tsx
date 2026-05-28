@@ -36,12 +36,11 @@ export default function RewardsPage() {
           <p className="mt-2 text-4xl font-bold">{formatAmountFromNaira(wallet?.balance ?? 0)}</p>
         )}
         <Button
-          onClick={() => setWithdrawOpen(true)}
-          disabled={!wallet?.balance || wallet.balance < 1}
-          className="mt-4 bg-white/20 text-white hover:bg-white/30 disabled:cursor-not-allowed disabled:opacity-60"
+          disabled
+          className="mt-4 bg-white/20 text-white cursor-not-allowed opacity-60"
           size="sm"
         >
-          Withdraw to Wallet
+          Withdraw to Wallet (Coming Soon)
         </Button>
       </div>
 
