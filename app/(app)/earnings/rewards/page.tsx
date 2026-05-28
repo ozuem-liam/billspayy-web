@@ -92,23 +92,30 @@ export default function RewardsPage() {
               </p>
             </div>
           ) : (
-            allEntries.map((entry: any) => (
-              <div key={entry.id} className="flex items-start gap-3 p-4">
-                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-orange-100 text-sm">
-                  🎁
+            allEntries.map((entry: any) => {
+              const isWithdrawal = entry.reason === 'WITHDRAWAL_TO_MAIN'
+              const absAmount = Math.abs(entry.amount)
+              return (
+                <div key={entry.id} className="flex items-start gap-3 p-4">
+                  <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-sm ${isWithdrawal ? 'bg-gray-100' : 'bg-orange-100'}`}>
+                    {isWithdrawal ? '↗️' : '🎁'}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-gray-900 leading-tight">
+                      {isWithdrawal
+                        ? 'Withdrawn to main wallet'
+                        : entry.description || `Reward from ${entry.meta?.referredEmail ? maskEmail(entry.meta.referredEmail) : 'a friend'} joining BillsPayy`}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5">{formatDate(entry.createdAt)}</p>
+                  </div>
+                  <div className="flex-shrink-0 text-right">
+                    <p className={`text-sm font-bold ${isWithdrawal ? 'text-red-500' : 'text-orange-600'}`}>
+                      {isWithdrawal ? '-' : '+'}{formatAmountFromNaira(absAmount)}
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-900 leading-tight">
-                    {entry.description ||
-                      `Reward from ${entry.meta?.referredEmail ? maskEmail(entry.meta.referredEmail) : 'a friend'} joining BillsPayy`}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-0.5">{formatDate(entry.createdAt)}</p>
-                </div>
-                <div className="flex-shrink-0 text-right">
-                  <p className="text-sm font-bold text-orange-600">+{formatAmountFromNaira(entry.amount)}</p>
-                </div>
-              </div>
-            ))
+              )
+            })
           )}
 
           {isFetchingNextPage && <SkeletonRow />}
