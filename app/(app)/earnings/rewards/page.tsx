@@ -1,13 +1,16 @@
 'use client'
 
+import { useState } from 'react'
 import { ArrowLeft, Info } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { SkeletonRow } from '@/components/shared/SkeletonCard'
 import { useRewardWallet, useRewardLedger } from '@/hooks/useEarnings'
+import { WithdrawModal } from '@/components/shared/WithdrawModal'
 import { formatAmountFromNaira, formatDate, maskEmail } from '@/lib/utils'
 
 export default function RewardsPage() {
+  const [withdrawOpen, setWithdrawOpen] = useState(false)
   const { wallet, isLoading: walletLoading } = useRewardWallet()
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useRewardLedger()
 
@@ -33,13 +36,21 @@ export default function RewardsPage() {
           <p className="mt-2 text-4xl font-bold">{formatAmountFromNaira(wallet?.balance ?? 0)}</p>
         )}
         <Button
-          disabled
-          className="mt-4 bg-white/20 text-white hover:bg-white/30 cursor-not-allowed"
+          onClick={() => setWithdrawOpen(true)}
+          disabled={!wallet?.balance || wallet.balance < 1}
+          className="mt-4 bg-white/20 text-white hover:bg-white/30 disabled:cursor-not-allowed disabled:opacity-60"
           size="sm"
         >
-          Withdraw to Wallet (Soon)
+          Withdraw to Wallet
         </Button>
       </div>
+
+      <WithdrawModal
+        open={withdrawOpen}
+        onClose={() => setWithdrawOpen(false)}
+        type="REWARD"
+        availableBalance={wallet?.balance ?? 0}
+      />
 
       {/* How it works */}
       <div className="rounded-xl border border-orange-200 bg-orange-50 p-4">

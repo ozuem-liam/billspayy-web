@@ -1,7 +1,9 @@
 'use client'
 
-import { useQuery, useInfiniteQuery } from '@tanstack/react-query'
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { earningsApi } from '@/lib/api'
+import { useAppStore } from '@/store'
+import toast from 'react-hot-toast'
 
 export function useEarningsWallets() {
   return useQuery({
@@ -56,6 +58,31 @@ export function useCommissionLedger() {
     },
     initialPageParam: undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor || undefined,
+  })
+}
+
+export function useWithdrawToWallet() {
+  const queryClient = useQueryClient()
+  const setWalletBalance = useAppStore((s) => s.setWalletBalance)
+
+  return useMutation({
+    mutationFn: async ({ type, amount }: { type: 'COMMISSION' | 'REWARD'; amount: number }) => {
+      const { data } = await earningsApi.withdraw(type, amount)
+      return data?.data ?? data
+    },
+    onSuccess: (data) => {
+      if (data?.newMainBalanceNaira !== undefined) {
+        setWalletBalance(data.newMainBalanceNaira)
+      }
+      queryClient.invalidateQueries({ queryKey: ['earnings-wallets'] })
+      queryClient.invalidateQueries({ queryKey: ['wallet-balance'] })
+      queryClient.invalidateQueries({ queryKey: ['wallet-transactions'] })
+      toast.success('Withdrawn to main wallet successfully!')
+    },
+    onError: (err: any) => {
+      const msg = err?.response?.data?.message || 'Withdrawal failed. Please try again.'
+      toast.error(msg)
+    },
   })
 }
 

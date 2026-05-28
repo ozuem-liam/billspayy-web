@@ -6,12 +6,14 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { SkeletonRow } from '@/components/shared/SkeletonCard'
 import { useCommissionWallet, useCommissionLedger } from '@/hooks/useEarnings'
+import { WithdrawModal } from '@/components/shared/WithdrawModal'
 import { cn, formatAmountFromNaira, formatDate, getCategoryLabel } from '@/lib/utils'
 
 const CATEGORIES = ['ALL', 'AIRTIME', 'DATA', 'ELECTRICITY', 'CABLETV']
 
 export default function CommissionPage() {
   const [category, setCategory] = useState('ALL')
+  const [withdrawOpen, setWithdrawOpen] = useState(false)
 
   const { wallet, isLoading: walletLoading } = useCommissionWallet()
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useCommissionLedger()
@@ -42,14 +44,21 @@ export default function CommissionPage() {
           <p className="mt-2 text-4xl font-bold">{formatAmountFromNaira(wallet?.balance ?? 0)}</p>
         )}
         <Button
-          disabled
-          className="mt-4 bg-white/20 text-white hover:bg-white/30 cursor-not-allowed"
+          onClick={() => setWithdrawOpen(true)}
+          disabled={!wallet?.balance || wallet.balance < 1}
+          className="mt-4 bg-white/20 text-white hover:bg-white/30 disabled:cursor-not-allowed disabled:opacity-60"
           size="sm"
-          title="Coming in Phase 2"
         >
-          Withdraw to Wallet (Soon)
+          Withdraw to Wallet
         </Button>
       </div>
+
+      <WithdrawModal
+        open={withdrawOpen}
+        onClose={() => setWithdrawOpen(false)}
+        type="COMMISSION"
+        availableBalance={wallet?.balance ?? 0}
+      />
 
       {/* How it works */}
       <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">

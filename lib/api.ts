@@ -176,6 +176,8 @@ export const earningsApi = {
     const query = searchParams.toString()
     return api.get(`/v1/wallets/${type}/ledger${query ? `?${query}` : ''}`)
   },
+  withdraw: (type: 'COMMISSION' | 'REWARD', amount: number) =>
+    api.post(`/v1/wallets/${type}/withdraw`, { amount }),
 }
 
 export const referralsApi = {
