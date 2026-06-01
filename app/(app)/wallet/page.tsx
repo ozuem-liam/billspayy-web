@@ -39,10 +39,28 @@ function TxIcon({ kind, status }: { kind: string; status: string }) {
 function WalletPageInner() {
   const walletBalance = useAppStore((s) => s.walletBalance)
   const [fundModalOpen, setFundModalOpen] = useState(false)
+  const [verifyingRef, setVerifyingRef] = useState<string | null>(null)
   const searchParams = useSearchParams()
   const router = useRouter()
   const verifyMutation = useVerifyWallet()
   const hasVerified = useRef(false)
+
+  const handleCompletePayment = async (tx: any) => {
+    setVerifyingRef(tx.reference)
+    try {
+      const result = await verifyMutation.mutateAsync({ reference: tx.reference, paymentMethod: 'paystack' })
+      // If payment wasn't successful yet, send user to Paystack to complete it
+      if (!result?.success || result?.status === 'already_completed') return
+      if (result?.status !== 'success') {
+        window.location.href = tx.authorizationUrl
+      }
+    } catch {
+      // Verification errored — send user back to Paystack
+      window.location.href = tx.authorizationUrl
+    } finally {
+      setVerifyingRef(null)
+    }
+  }
 
   const { isLoading: balanceLoading } = useWalletBalance()
   const { data: transactions, isLoading: txnsLoading } = useWalletTransactions(10)
@@ -142,11 +160,21 @@ function WalletPageInner() {
                   {/* Retry button for pending credit transactions */}
                   {isPending && isCredit && tx.authorizationUrl && (
                     <button
-                      onClick={() => { window.location.href = tx.authorizationUrl }}
-                      className="mt-2 ml-[52px] flex items-center gap-1 text-xs font-semibold text-[#6C3CE1] hover:underline"
+                      onClick={() => handleCompletePayment(tx)}
+                      disabled={verifyingRef === tx.reference}
+                      className="mt-2 ml-[52px] flex items-center gap-1 text-xs font-semibold text-[#6C3CE1] hover:underline disabled:opacity-50"
                     >
-                      <RotateCcw className="h-3 w-3" />
-                      Complete payment
+                      {verifyingRef === tx.reference ? (
+                        <>
+                          <span className="h-3 w-3 animate-spin rounded-full border-2 border-[#6C3CE1] border-t-transparent inline-block" />
+                          Verifying...
+                        </>
+                      ) : (
+                        <>
+                          <RotateCcw className="h-3 w-3" />
+                          Complete payment
+                        </>
+                      )}
                     </button>
                   )}
                 </div>
