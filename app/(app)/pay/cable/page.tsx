@@ -305,7 +305,7 @@ function CablePageInner() {
         )}
 
         {selectedPlan && hasEnoughBalance && (
-          <CommissionPreview amount={selectedPlan.amount} category="CABLETV" />
+          <CommissionPreview amount={selectedPlan.amount} category="CABLE" provider={provider} />
         )}
       </div>
 

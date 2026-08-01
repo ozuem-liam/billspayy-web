@@ -180,6 +180,23 @@ export const earningsApi = {
     api.post(`/v1/wallets/${type}/withdraw`, { amount }),
 }
 
+export interface CommissionPreviewResponse {
+  serviceId: string
+  provider: string | null
+  amountNaira: number
+  supplierRateBps: number
+  customerRateBps: number
+  referrerRewardRateBps: number
+  supplierDiscountNaira: number
+  customerCommissionNaira: number
+  effectiveFrom: string
+}
+
+export const commissionApi = {
+  preview: (body: { serviceId: string; provider?: string; amountNaira: number }) =>
+    api.post('/v1/commissions/preview', body),
+}
+
 export const referralsApi = {
   getReferrals: () => api.get('/v1/customers/me/referrals'),
 }

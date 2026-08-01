@@ -401,7 +401,7 @@ function ElectricityPageInner() {
           )}
 
           {amount >= 500 && hasEnoughBalance && (
-            <CommissionPreview amount={amount} category="ELECTRICITY" />
+            <CommissionPreview amount={amount} category="ELECTRICITY" provider={serviceId} />
           )}
         </div>
       )}
