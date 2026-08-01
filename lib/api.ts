@@ -197,6 +197,23 @@ export const commissionApi = {
     api.post('/v1/commissions/preview', body),
 }
 
+export const additionalServicesApi = {
+  getEsimCountries: () => api.get('/esims/countries'),
+  getEsimPackages: (country: string) =>
+    api.get('/esims/packages', { params: { country } }),
+  getEsimBalance: (iccid: string) =>
+    api.get('/esims/balance', { params: { iccid } }),
+  purchaseEsim: (body: { country: string; productId: string; iccid?: string; pin: string }) =>
+    api.post('/esims/purchase', body),
+  getEducationPackages: (serviceId: string) =>
+    api.get('/logical-pins/packages', { params: { serviceId } }),
+  purchaseEducationPin: (body: { serviceId: string; recipient: string; amount: number; pin: string }) =>
+    api.post('/logical-pins/purchase', body),
+  getVerificationPackages: () => api.get('/verification/packages'),
+  purchaseVerification: (body: { serviceId: string; uniqueIdentifier: string; pin: string }) =>
+    api.post('/verification/verify', body),
+}
+
 export const referralsApi = {
   getReferrals: () => api.get('/v1/customers/me/referrals'),
 }

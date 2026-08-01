@@ -35,7 +35,7 @@ export interface BillsPaymentTransaction {
   id: string
   reference: string
   requestId?: string
-  category: 'AIRTIME' | 'DATA' | 'ELECTRICITY' | 'CABLETV'
+  category: 'AIRTIME' | 'DATA' | 'ELECTRICITY' | 'CABLETV' | 'LOGICAL_PINS' | 'ESIM' | 'VERIFICATION'
   serviceId?: string
   serviceName?: string
   amount: number // in kobo

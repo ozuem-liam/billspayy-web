@@ -20,7 +20,7 @@ import { useAppStore } from '@/store'
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/pay/airtime', label: 'Pay Bills', icon: Smartphone },
+  { href: '/pay', label: 'Pay Bills', icon: Smartphone },
   { href: '/wallet', label: 'Wallet', icon: Wallet },
   { href: '/earnings/commission', label: 'Earnings', icon: TrendingUp },
   { href: '/referrals', label: 'Referrals', icon: Users },

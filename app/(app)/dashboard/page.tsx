@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ChevronRight, AlertCircle, Zap, X, TrendingUp, Gift, CreditCard, Trophy } from 'lucide-react'
+import { ChevronRight, AlertCircle, Zap, X, TrendingUp, Gift, CreditCard, Trophy, Plane, GraduationCap, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -23,6 +23,7 @@ const QUICK_ACTIONS = [
   {
     href: '/pay/airtime',
     label: 'Airtime',
+    icon: Zap,
     logos: [
       'https://vtpass.com/resources/products/200X200/MTN-Airtime-VTU.jpg',
       'https://vtpass.com/resources/products/200X200/Airtel-Airtime-VTU.jpg',
@@ -35,6 +36,7 @@ const QUICK_ACTIONS = [
   {
     href: '/pay/data',
     label: 'Data',
+    icon: Zap,
     logos: [
       'https://vtpass.com/resources/products/200X200/MTN-Airtime-VTU.jpg',
       'https://vtpass.com/resources/products/200X200/Airtel-Airtime-VTU.jpg',
@@ -47,6 +49,7 @@ const QUICK_ACTIONS = [
   {
     href: '/pay/electricity',
     label: 'Electricity',
+    icon: Zap,
     logos: null,
     bg: 'bg-orange-50',
     iconColor: 'text-orange-500',
@@ -54,6 +57,7 @@ const QUICK_ACTIONS = [
   {
     href: '/pay/cable',
     label: 'Cable TV',
+    icon: Zap,
     logos: [
       'https://vtpass.com/resources/products/200X200/Pay-DSTV-Subscription.jpg',
       'https://vtpass.com/resources/products/200X200/Gotv-Payment.jpg',
@@ -62,6 +66,30 @@ const QUICK_ACTIONS = [
     ],
     bg: 'bg-purple-50',
     iconColor: 'text-purple-500',
+  },
+  {
+    href: '/pay/esim',
+    label: 'Travel eSIM',
+    logos: null,
+    icon: Plane,
+    bg: 'bg-cyan-50',
+    iconColor: 'text-cyan-600',
+  },
+  {
+    href: '/pay/education',
+    label: 'Education',
+    logos: null,
+    icon: GraduationCap,
+    bg: 'bg-emerald-50',
+    iconColor: 'text-emerald-600',
+  },
+  {
+    href: '/pay/verification',
+    label: 'Verify',
+    logos: null,
+    icon: ShieldCheck,
+    bg: 'bg-indigo-50',
+    iconColor: 'text-indigo-600',
   },
 ]
 
@@ -199,7 +227,7 @@ export default function DashboardPage() {
       <div>
         <h2 className="mb-3 text-sm font-semibold text-gray-700">Quick Pay</h2>
         <div className="grid grid-cols-4 gap-2.5">
-          {QUICK_ACTIONS.map(({ href, logos, label, bg, iconColor }) => (
+          {QUICK_ACTIONS.map(({ href, logos, label, bg, iconColor, icon: Icon = Zap }) => (
             <Link key={href} href={href}>
               <div className="flex flex-col items-center gap-2 rounded-2xl bg-white p-3 border border-gray-100 hover:border-gray-200 hover:shadow-sm transition cursor-pointer">
                 <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${bg}`}>
@@ -213,7 +241,7 @@ export default function DashboardPage() {
                       ))}
                     </div>
                   ) : (
-                    <Zap className={`h-6 w-6 ${iconColor}`} />
+                    <Icon className={`h-6 w-6 ${iconColor}`} />
                   )}
                 </div>
                 <span className="text-xs font-medium text-gray-600 text-center leading-tight">{label}</span>
